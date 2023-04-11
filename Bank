@@ -1,0 +1,130 @@
+CREATE TABLE Account (
+  accno INT,
+  cid INT,
+  bid INT,
+  amount INT,
+  adate DATE,
+  PRIMARY KEY (accno)
+);
+
+CREATE TABLE Customer (
+  cid INT,
+  cname VARCHAR(50),
+  city VARCHAR(50),
+  PRIMARY KEY (cid)
+);
+
+CREATE TABLE Borrower (
+  loanno INT,
+  cid INT,
+  bid INT,
+  amount INT,
+  PRIMARY KEY (loanno),
+  FOREIGN KEY (cid) REFERENCES Customer(cid),
+  FOREIGN KEY (bid) REFERENCES Branch(bid)
+);
+
+CREATE TABLE Branch (
+  bid INT,
+  bname VARCHAR(50),
+  city VARCHAR(50),
+  PRIMARY KEY (bid)
+);
+
+5.SELECT DISTINCT Customer.cname
+FROM Customer, Account, Branch
+WHERE Customer.cid = Account.cid
+AND Account.bid = Branch.bid
+AND Branch.bid IN (
+  SELECT Account.bid
+  FROM Account
+  GROUP BY Account.bid
+  HAVING AVG(Account.amount) > 32000
+);
+
+6.SELECT Branch.bname
+FROM Branch, Account
+WHERE Branch.bid = Account.bid
+GROUP BY Branch.bid, Branch.bname
+HAVING SUM(Account.amount) > 5000;
+
+7.SELECT Branch.bname
+FROM Branch, Account
+WHERE Branch.bid = Account.bid
+AND Branch.city = 'Trivandrum'
+GROUP BY Branch.bid, Branch.bname
+HAVING SUM(Account.amount) > 32000;
+
+8.SELECT Customer.cname
+FROM Customer, Account
+WHERE Customer.cid = Account.cid
+AND Account.amount = (
+  SELECT MAX(amount)
+  FROM Account
+);
+
+9.SELECT Branch.bname
+FROM Branch, Account
+WHERE Branch.bid = Account.bid
+GROUP BY Branch.bid, Branch.bname
+ORDER BY COUNT(DISTINCT Account.cid) DESC
+LIMIT 1;
+
+10.SELECT Customer.cname
+FROM Customer, Account
+WHERE Customer.cid = Account.cid
+GROUP BY Account.cid, Customer.cname
+ORDER BY COUNT(Account.accno) DESC
+LIMIT 1;
+
+11.SELECT city
+FROM Branch
+GROUP BY city
+HAVING COUNT(*) = (
+    SELECT COUNT(*)
+    FROM Branch
+    GROUP BY city
+    ORDER BY COUNT(*) DESC
+    LIMIT 1
+);
+
+12.SELECT Branch.bname
+FROM Branch
+INNER JOIN Account ON Branch.bid = Account.bid
+GROUP BY Branch.bid, Branch.bname
+HAVING COUNT(DISTINCT Account.cid) > 2;
+
+13.SELECT Customer.cname
+FROM Customer
+INNER JOIN Account ON Customer.cid = Account.cid
+LEFT JOIN Borrower ON Customer.cid = Borrower.cid AND Account.bid = Borrower.bid
+WHERE Borrower.loanno IS NULL;
+
+14.SELECT DISTINCT Customer.cname
+FROM Customer
+LEFT JOIN Account ON Customer.cid = Account.cid
+LEFT JOIN Borrower ON Customer.cid = Borrower.cid
+WHERE Customer.city = 'Kochi'
+AND (Account.accno IS NOT NULL OR Borrower.loanno IS NOT NULL);
+
+
+15.SELECT SUM(amount) AS total_loan
+FROM Borrower;
+
+
+16.SELECT DISTINCT Customer.cname
+FROM Customer
+INNER JOIN Account ON Customer.cid = Account.cid
+WHERE Account.amount = (
+    SELECT MAX(amount)
+    FROM Account
+    WHERE bid = (
+        SELECT bid
+        FROM Account
+        INNER JOIN Customer ON Account.cid = Customer.cid
+        WHERE Customer.cname = 'Arun'
+    )
+);
+
+
+
